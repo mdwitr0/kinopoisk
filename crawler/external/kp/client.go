@@ -1,7 +1,10 @@
 package kp
 
 import (
+	"context"
+	"github.com/goccy/go-json"
 	"github.com/idoubi/goz"
+	"github.com/rs/zerolog"
 )
 
 const host = "https://graphql.kinopoisk.ru/graphql/"
@@ -38,4 +41,28 @@ func NewClient() *Client {
 	return &Client{
 		rest: g,
 	}
+}
+
+func post[T any](c *Client, ctx context.Context, url string, options goz.Options) (*T, error) {
+	logger := zerolog.Ctx(ctx)
+
+	response, err := c.rest.Post(url, options)
+	if err != nil {
+		logger.Error().Err(err).Msg("Error getting movies list")
+		return nil, err
+	}
+
+	bytes, err := response.GetBody()
+	if err != nil {
+		logger.Error().Err(err).Msg("Error getting movies list")
+		return nil, err
+	}
+
+	var result T
+	if err := json.Unmarshal(bytes, &result); err != nil {
+		logger.Error().Err(err).Msg("Error unmarshalling movies list")
+		return nil, err
+	}
+
+	return &result, nil
 }

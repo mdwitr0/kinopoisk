@@ -2,7 +2,6 @@ package kp
 
 import (
 	"context"
-	"github.com/goccy/go-json"
 	"github.com/idoubi/goz"
 	"github.com/mdwitr0/kinopoisk/crawler/external/kp/model"
 	"github.com/rs/zerolog"
@@ -38,26 +37,12 @@ func (c *Client) GetAllMovies(ctx context.Context, limit int, offset int) (*mode
 		Query: map[string]interface{}{"operationName": operation},
 	}
 
-	response, err := c.rest.Post("", options)
+	response, err := post[model.Response[model.MovieList]](c, ctx, "", options)
 	if err != nil {
 		logger.Error().Err(err).Msg("Error getting movies list")
 
 		return nil, err
 	}
 
-	bytes, err := response.GetBody()
-	if err != nil {
-		logger.Error().Err(err).Msg("Error getting movies list")
-
-		return nil, err
-	}
-
-	var result model.Response[model.MovieList]
-	if err := json.Unmarshal(bytes, &result); err != nil {
-		logger.Error().Err(err).Msg("Error unmarshalling movies list")
-
-		return nil, err
-	}
-
-	return &result, nil
+	return response, nil
 }
